@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+
+# Kaggle downloads / generated reports / submissions
+kaggle_data/
+
+# AutoGluon default model output (for legacy scripts)
+AutogluonModels/
+
+# Local credentials
+.kaggle/
+kaggle.json
+.env

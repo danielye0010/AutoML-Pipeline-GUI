@@ -1,65 +1,108 @@
-# AutoML solution with GUI -  KANE: Kaggle AutoML No-Code Engine
+# KANE — Kaggle AutoML No-Code Engine
 
-## Short Description
+KANE is a local web application for configuring and running Kaggle tabular AutoML workflows through a simple GUI. It combines the Kaggle CLI for competition data acquisition, AutoGluon for model training and ensembling, and Sweetviz for exploratory data analysis.
 
-KANE (Kaggle AutoML No-Code Engine) is a web-based application designed to simplify and automate participation in Kaggle competitions. Built on top of the AutoGluon framework, KANE offers an intuitive, no-code interface to configure, execute, and optimize machine learning workflows with minimal effort. Its features include parameter configuration, automated backend processes, advanced training strategies, and real-time monitoring.
-
----
+The goal is to make a standard competition workflow accessible from one interface: download data, choose the prediction setup, train within a time budget, generate predictions, and export a submission file.
 
 ## Features
 
-### 1. Intuitive Parameter Configuration via Dropdown Menus
-KANE provides a user-friendly interface for configuring machine learning tasks without any coding. Users can customize the following options:
-- **Competition Name**: Specify the Kaggle competition to automatically download and prepare datasets.
-- **Label Column**: Define the target variable for prediction.
-- **Problem Type**: Choose between regression, binary classification, or multiclass classification—or let KANE auto-detect the problem type.
-- **Evaluation Metric**: Select metrics like accuracy or RMSE to guide optimization.
-- **Time Limit**: Set predefined training durations (e.g., 5 minutes, 1 hour) to balance performance and resource usage.
-- **Training Presets**: Adjust model depth and computational intensity with presets like `'best_quality'`, `'good_quality'`, or `'medium_quality'`.
+- **No-code configuration** for competition name, label column, ID column, problem type, evaluation metric, time budget, and AutoGluon preset.
+- **Automated Kaggle data acquisition** using the Kaggle CLI.
+- **AutoML training** through `autogluon.tabular.TabularPredictor`.
+- **Submission generation** from the competition test set.
+- **EDA reports** using Sweetviz.
+- **Progress/error reporting** through the Flask interface.
+- **Isolated run directories** so model artifacts remain inside the competition workspace.
 
----
+## Local architecture
 
-### 2. Automated Backend Processes
-KANE automates critical backend workflows to ensure seamless execution:
-- **Automated Data Acquisition**: Downloads and prepares competition data based on user inputs, handling extraction and organization.
-- **No-Code Model Training**: Initiates model training with AutoGluon managing preprocessing, model selection, and optimization.
-- **Submission File Generation**: Automatically formats and creates Kaggle-compatible submission files.
-- **Exploratory Data Analysis (EDA)**: Generates detailed reports using the Sweetviz framework, offering visualizations and statistical insights.
-- **Progress Monitoring and Error Handling**: Includes a real-time progress bar and mechanisms to detect and report errors, providing actionable feedback.
-
----
-
-### 3. Advanced Training Strategies
-KANE leverages AutoGluon’s state-of-the-art training strategies to optimize model performance:
-- **Data Preprocessing**: Handles diverse data types (numerical, categorical, text, date/time) with model-agnostic transformations.
-- **Multi-Model Ensembling**: Combines models like boosted trees, neural networks, and random forests using multi-layer stacking for robust predictions.
-- **Repeated k-Fold Bagging**: Trains multiple versions of models on different data partitions, reducing overfitting and ensuring stability.
-- **Hyperparameter Optimization**: Uses Ray Tune to explore hyperparameter spaces with efficient strategies like random search and Bayesian optimization.
-- **Resource and Time Management**: Allocates training time adaptively, prioritizing models with the highest potential impact on accuracy.
-
----
-
-### 4. Real-Time Monitoring and Feedback
-KANE offers transparency and reliability through:
-- **Real-Time Progress Tracking**: A progress bar displays the status of tasks such as data preparation, training, and submission generation.
-- **Error Detection and Reporting**: Alerts users to issues, ensuring quick resolution and uninterrupted workflows.
-
----
-
-## Getting Started
-
-Follow the steps below to set up and launch KANE on your local machine. For installing AutoGluon and setting up kaggle api, please refer to the official documentation.
-
-### Clone the Repository
-Clone the KANE repository from GitHub to your local machine:
-```bash
-git clone https://github.com/danielye0010/KANE-Kaggle-Automated-No-Code-Engine.git
+```text
+Browser
+  ↓
+Flask UI (`app.py`)
+  ├── Kaggle CLI → competition data
+  ├── AutoGluon → trained models / predictions
+  └── Sweetviz → EDA report
 ```
-### Dependencies and Launchment
+
+KANE is designed as a **local development tool**, not as an internet-facing multi-user service.
+
+## Installation
+
+Create an isolated Python environment, then install the repository dependencies:
+
 ```bash
 pip install -r requirements.txt
+```
+
+AutoGluon has platform- and Python-version-specific dependencies, so an isolated environment is recommended.
+
+## Kaggle authentication
+
+Configure the Kaggle CLI before launching KANE. Use your normal Kaggle API credential setup (for example, the Kaggle CLI credential file or supported environment variables). Credentials are not stored by KANE and should never be committed to this repository.
+
+You can verify the CLI independently before starting the app:
+
+```bash
+kaggle competitions list
+```
+
+## Launch
+
+```bash
 python app.py
 ```
 
-## MIT License
-KANE is licensed under the MIT License, allowing free use, modification, and distribution with attribution. The software is provided "as is," without warranty of any kind. For full details, see the LICENSE file.
+Then open the local Flask address shown in the terminal.
+
+Flask debug mode is **off by default**. For local debugging only:
+
+```bash
+FLASK_DEBUG=1 python app.py
+```
+
+## Workspace
+
+By default, competition data and model outputs are kept under:
+
+```text
+kaggle_data/<competition-slug>/
+├── train.csv
+├── test.csv
+├── models/<task-id>/
+├── <competition-slug>_submission.csv
+└── sweetviz_report.html
+```
+
+Override the workspace root with:
+
+```bash
+export KANE_DATA_DIR=/path/to/kane-workspace
+```
+
+The web form accepts Kaggle-style competition slugs only. Download commands are executed with an argument list rather than shell interpolation, and extracted ZIP members are checked to remain inside the selected workspace.
+
+## Training workflow
+
+1. Enter the Kaggle competition slug.
+2. Specify the target/label column and test-set ID column.
+3. Select a problem type or let KANE infer a basic type from the target.
+4. Choose an evaluation metric, time limit, and AutoGluon preset.
+5. Start training and follow the status page.
+6. Retrieve the generated submission CSV from the competition workspace.
+
+## AutoML scope
+
+KANE delegates model preprocessing, model selection, ensembling, and time-budgeted training to AutoGluon. The exact models available depend on the installed AutoGluon environment and optional dependencies.
+
+The repository is a practical orchestration/UI project rather than a new AutoML algorithm: its value is integrating competition acquisition, configuration, training, reporting, and submission generation into one workflow.
+
+## Other files
+
+- `autonlp.py` — experimental NLP-oriented AutoML workflow.
+- `ttk-version.py` — desktop/Tk interface experiment.
+- `easy_test.py` and `titanic/` — lightweight example/test assets.
+
+## License
+
+KANE is released under the MIT License. See `LICENSE` for details.
